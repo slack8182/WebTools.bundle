@@ -396,12 +396,9 @@ class git(object):
 				bError = True
 				for filename in zipfile:
 					if '/Contents/Info.plist' in filename:
-						# We found the info.plist file here, but is the dir level okay?
-						count = filename.count('/')		
-						if count == 2:
-							bError = False
-						else:
-							Log.Critical('Tried to install ' + bundleName + ' but dir levels did not match')				
+						pos = filename.find('/Contents/')
+						cutStr = filename[:pos]
+						bError = False
 				if bError:
 					Core.storage.remove_tree(Core.storage.join_path(self.PLUGIN_DIR, bundleName))
 					Log.Debug('The bundle downloaded is not a Plex Channel bundle!')
@@ -411,31 +408,34 @@ class git(object):
 					# Walk contents of the zip, and extract as needed
 					data = zipfile[filename]
 					if not str(filename).endswith('/'):
-						# Pure file, so save it				
-						path = self.getSavePath(bundleName, filename)
+						# Pure file, so save it	
+						path = self.getSavePath(bundleName, filename.replace(cutStr, ''))
 						Log.Debug('Extracting file' + path)
 						try:
 							Core.storage.save(path, data)
 						except Exception, e:
 							bError = True
+							print 'ged5', filename , 
 							Log.Critical('Exception happend in downloadBundle2tmp: ' + str(e))
 					else:
 						# We got a directory here
 						Log.Debug(filename.split('/')[-2])
 						if not str(filename.split('/')[-2]).startswith('.'):
 							# Not hidden, so let's create it
-							path = self.getSavePath(bundleName, filename)
+							path = self.getSavePath(bundleName, filename.replace(cutStr, ''))
 							Log.Debug('Extracting folder ' + path)
 							try:
 								Core.storage.ensure_dirs(path)
 							except Exception, e:
 								bError = True
+								print 'ged6'
 								Log.Critical('Exception happend in downloadBundle2tmp: ' + str(e))
 				if not bError:
 					# Install went okay, so save info
 					saveInstallInfo(url, bundleName)
 					return True
-			except:
+			except Exception, e:
+				Log.Critical('Exception in downloadBundle2tmp: ' + str(e)) 
 				return False
 
 		# Starting install main
