@@ -152,67 +152,68 @@ class git(object):
 			migratedBundles = {}
 			for pluginDir in dirs:
 				if pluginDir.endswith('.bundle'):
-					# It's a bundle
-					if pluginDir.upper() not in knownBundles:
-						# It's unknown
-						if pluginDir not in self.IGNORE_BUNDLE:
-							Log.Debug('About to migrate %s' %(pluginDir))
-							# This we need to migrate
-							(target, dtStamp) = getIdentifier(pluginDir)
-							# try and see if part of uas Cache
-							uasListjson = getUASCacheList()
-							bFound = False
-							for git in uasListjson:
-								if target == uasListjson[git]['identifier']:
-									Log.Debug('Found %s is part of uas' %(target))
-									targetGit = {}
-									targetGit['description'] = uasListjson[git]['description']
-									targetGit['title'] = uasListjson[git]['title']
-									targetGit['bundle'] = uasListjson[git]['bundle']
-									targetGit['branch'] = uasListjson[git]['branch']
-									targetGit['identifier'] = uasListjson[git]['identifier']
-									targetGit['type'] = uasListjson[git]['type']
-									targetGit['icon'] = uasListjson[git]['icon']
-									targetGit['date'] = dtStamp
-									targetGit['supporturl'] = uasListjson[git]['supporturl']
-									Dict['installed'][git] = targetGit
-									Log.Debug('Dict stamped with the following install entry: ' + git + ' - '  + str(targetGit))
-									# Now update the PMS-AllBundleInfo Dict as well
-									Dict['PMS-AllBundleInfo'][git] = targetGit
-									Dict.Save()
-									migratedBundles[git] = targetGit
-									bFound = True
-									pms.updateUASTypesCounters()
-									break
-							if not bFound:
-								Log.Debug('Found %s is sadly not part of uas' %(pluginDir))
-								vFile = Core.storage.join_path(self.PLUGIN_DIR, pluginDir, 'Contents', 'VERSION')
-								if os.path.isfile(vFile):
-									Log.Debug(pluginDir + ' is an official bundle, so skipping')
-								else:
-									git = {}
-									git['title'] = pluginDir[:-7]
-									git['description'] = ''
-									git['branch'] = ''
-									git['bundle'] = pluginDir
-									git['identifier'] = target
-									git['type'] = ['Unknown']
-									git['icon'] = ''
-									git['date'] = dtStamp
-									Dict['installed'][target] = git
-									# Now update the PMS-AllBundleInfo Dict as well
-									Dict['PMS-AllBundleInfo'][target] = git
-									migratedBundles[target] = git
-									Log.Debug('Dict stamped with the following install entry: ' + pluginDir + ' - '  + str(git))
-									Dict.Save()
-									pms.updateUASTypesCounters()
+					if not pluginDir.startswith('.'):
+						# It's a bundle
+						if pluginDir.upper() not in knownBundles:
+							# It's unknown
+							if pluginDir not in self.IGNORE_BUNDLE:
+								Log.Debug('About to migrate %s' %(pluginDir))
+								# This we need to migrate
+								(target, dtStamp) = getIdentifier(pluginDir)
+								# try and see if part of uas Cache
+								uasListjson = getUASCacheList()
+								bFound = False
+								for git in uasListjson:
+									if target == uasListjson[git]['identifier']:
+										Log.Debug('Found %s is part of uas' %(target))
+										targetGit = {}
+										targetGit['description'] = uasListjson[git]['description']
+										targetGit['title'] = uasListjson[git]['title']
+										targetGit['bundle'] = uasListjson[git]['bundle']
+										targetGit['branch'] = uasListjson[git]['branch']
+										targetGit['identifier'] = uasListjson[git]['identifier']
+										targetGit['type'] = uasListjson[git]['type']
+										targetGit['icon'] = uasListjson[git]['icon']
+										targetGit['date'] = dtStamp
+										targetGit['supporturl'] = uasListjson[git]['supporturl']
+										Dict['installed'][git] = targetGit
+										Log.Debug('Dict stamped with the following install entry: ' + git + ' - '  + str(targetGit))
+										# Now update the PMS-AllBundleInfo Dict as well
+										Dict['PMS-AllBundleInfo'][git] = targetGit
+										Dict.Save()
+										migratedBundles[git] = targetGit
+										bFound = True
+										pms.updateUASTypesCounters()
+										break
+								if not bFound:
+									Log.Debug('Found %s is sadly not part of uas' %(pluginDir))
+									vFile = Core.storage.join_path(self.PLUGIN_DIR, pluginDir, 'Contents', 'VERSION')
+									if os.path.isfile(vFile):
+										Log.Debug(pluginDir + ' is an official bundle, so skipping')
+									else:
+										git = {}
+										git['title'] = pluginDir[:-7]
+										git['description'] = ''
+										git['branch'] = ''
+										git['bundle'] = pluginDir
+										git['identifier'] = target
+										git['type'] = ['Unknown']
+										git['icon'] = ''
+										git['date'] = dtStamp
+										Dict['installed'][target] = git
+										# Now update the PMS-AllBundleInfo Dict as well
+										Dict['PMS-AllBundleInfo'][target] = git
+										migratedBundles[target] = git
+										Log.Debug('Dict stamped with the following install entry: ' + pluginDir + ' - '  + str(git))
+										Dict.Save()
+										pms.updateUASTypesCounters()
 			Log.Debug('Migrated: ' + str(migratedBundles))
 			req.clear()
 			req.set_status(200)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
 			req.finish(json.dumps(migratedBundles))
 		except Exception, e:
-			Log.Debug('Fatal error happened in migrate: ' + str(e))
+			Log.Critical('Fatal error happened in migrate: ' + str(e))
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
@@ -228,7 +229,7 @@ class git(object):
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
 			req.finish(json.dumps(Dict['uasTypes']))
 		except Exception, e:
-			Log.Debug('Exception in uasTypes: ' + str(e))
+			Log.Critical('Exception in uasTypes: ' + str(e))
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
@@ -270,7 +271,7 @@ class git(object):
 							Core.storage.save(path, data)
 						except Exception, e:
 							bError = True
-							Log.Debug("Unexpected Error")
+							Log.Critical("Unexpected Error " + str(e))
 					else:
 						# We got a directory here
 						Log.Debug(filename.split('/')[-2])
@@ -282,7 +283,7 @@ class git(object):
 								Core.storage.ensure_dirs(path)
 							except Exception, e:
 								bError = True
-								Log.Debug("Unexpected Error")			
+								Log.Critical("Unexpected Error " + str(e))			
 				# Update the AllBundleInfo as well
 				pms.updateAllBundleInfoFromUAS()
 				pms.updateUASTypesCounters()
@@ -295,7 +296,7 @@ class git(object):
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
 			req.finish('UASCache is up to date')	
 		except Exception, e:
-			Log.Debug('Exception in updateUASCache ' + str(e)) 
+			Log.Critical('Exception in updateUASCache ' + str(e)) 
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
@@ -417,7 +418,7 @@ class git(object):
 							Core.storage.save(path, data)
 						except Exception, e:
 							bError = True
-							Log.Debug('Exception happend in downloadBundle2tmp: ' + str(e))
+							Log.Critical('Exception happend in downloadBundle2tmp: ' + str(e))
 					else:
 						# We got a directory here
 						Log.Debug(filename.split('/')[-2])
@@ -429,7 +430,7 @@ class git(object):
 								Core.storage.ensure_dirs(path)
 							except Exception, e:
 								bError = True
-								Log.Debug('Exception happend in downloadBundle2tmp: ' + str(e))
+								Log.Critical('Exception happend in downloadBundle2tmp: ' + str(e))
 				if not bError:
 					# Install went okay, so save info
 					saveInstallInfo(url, bundleName)
@@ -456,6 +457,7 @@ class git(object):
 			req.finish('All is cool')
 			return req
 		else:
+			Log.Critical('Fatal error happened in install for :' + url)
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
 			req.finish('Fatal error happened in install for :' + url)
@@ -490,7 +492,7 @@ class git(object):
 				req.set_header('Content-Type', 'application/json; charset=utf-8')
 				req.finish(str(response))
 		except Exception, e:
-			Log.Debug('Fatal error happened in getLastUpdateTime for :' + url +  ' was: ' + str(e))
+			Log.Critical('Fatal error happened in getLastUpdateTime for :' + url +  ' was: ' + str(e))
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
@@ -518,7 +520,7 @@ class git(object):
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
 			req.finish(json.dumps(results))
 		except:
-			Log.Debug('Fatal error happened in getListofBundles')
+			Log.Critical('Fatal error happened in getListofBundles')
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
@@ -563,7 +565,7 @@ class git(object):
 			req.finish(response)
 			Log.Debug('Ending getReleaseInfo')
 		except:
-			Log.Debug('Fatal error happened in getReleaseInfo')
+			Log.Critical('Fatal error happened in getReleaseInfo')
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
