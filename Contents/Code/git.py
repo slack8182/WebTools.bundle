@@ -386,6 +386,25 @@ class git(object):
 
 		''' Download the bundle '''
 		def downloadBundle2tmp(url, bundleName):
+			# Helper function
+			def removeEmptyFolders(path, removeRoot=True):
+				'Function to remove empty folders'
+				if not os.path.isdir(path):
+					return
+				# remove empty subfolders
+				files = os.listdir(path)
+				if len(files):
+					for f in files:
+						fullpath = os.path.join(path, f)
+						if os.path.isdir(fullpath):
+							removeEmptyFolders(fullpath)
+				# if folder empty, delete it
+				files = os.listdir(path)
+				if len(files) == 0 and removeRoot:
+					Log.Debug('Removing empty directory: ' + path)
+					os.rmdir(path)
+
+			# Main 
 			try:
 				zipPath = url + '/archive/master.zip'
 				# Grap file from Github
@@ -394,16 +413,42 @@ class git(object):
 				Core.storage.ensure_dirs(Core.storage.join_path(self.PLUGIN_DIR, bundleName))
 				# Make sure it's actually a bundle channel
 				bError = True
+				bUpgrade = False
+				instFiles = []
 				for filename in zipfile:
+					# Make a list of all files and dirs in the zip
+					instFiles.append(filename)
 					if '/Contents/Info.plist' in filename:
 						pos = filename.find('/Contents/')
 						cutStr = filename[:pos]
 						bError = False
+						# so we hit the Info.plist file, and now we can make sure, that/if this is an upgrade or not
+						# So let's grap the identifier from the info file	of the bundle to be migrated	
+						# We start by temporary save that as Plug-ins/WT-tmp.plist
+						Core.storage.save(self.PLUGIN_DIR + '/WT-tmp.plist', zipfile[filename])
+						# Now read out the identifier
+						bundleId = plistlib.readPlist(self.PLUGIN_DIR + '/WT-tmp.plist')['CFBundleIdentifier']
+						Log.Debug('Identifier of the bundle to be installed is: ' + bundleId)
+						# Then nuke the file again
+						os.remove(self.PLUGIN_DIR + '/WT-tmp.plist')
+						# And finally check if it's already installed
+						for bundle in Dict['installed']:
+							if Dict['installed'][bundle]['identifier'] == bundleId:
+								bUpgrade = True
+								Log.Debug('Install is an upgrade')
+								break
+				if bUpgrade:
+					# It's an upgrade, so we need to store a list of files that we install here
+					newFiles = []
+					for fileName in instFiles:
+						newFiles.append(fileName.replace(cutStr, ''))
 				if bError:
 					Core.storage.remove_tree(Core.storage.join_path(self.PLUGIN_DIR, bundleName))
 					Log.Debug('The bundle downloaded is not a Plex Channel bundle!')
 					raise ValueError('The bundle downloaded is not a Plex Channel bundle!')
 				bError = False
+				if not bUpgrade:
+					presentFiles = []			
 				for filename in zipfile:
 					# Walk contents of the zip, and extract as needed
 					data = zipfile[filename]
@@ -415,7 +460,6 @@ class git(object):
 							Core.storage.save(path, data)
 						except Exception, e:
 							bError = True
-							print 'ged5', filename , 
 							Log.Critical('Exception happend in downloadBundle2tmp: ' + str(e))
 					else:
 						# We got a directory here
@@ -428,8 +472,16 @@ class git(object):
 								Core.storage.ensure_dirs(path)
 							except Exception, e:
 								bError = True
-								print 'ged6'
 								Log.Critical('Exception happend in downloadBundle2tmp: ' + str(e))
+
+				# Now we need to nuke files that should no longer be there!
+				for root, dirs, files in os.walk(bundleName):
+					for fname in files:
+						if Core.storage.join_path(root, fname).replace(bundleName, '') not in newFiles:
+							Log.Debug('Removing not needed file: ' + Core.storage.join_path(root, fname))
+							os.remove(Core.storage.join_path(root, fname))
+				# And now time to swipe empty directories
+				removeEmptyFolders(bundleName)
 				if not bError:
 					# Install went okay, so save info
 					saveInstallInfo(url, bundleName)
