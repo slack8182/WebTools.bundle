@@ -255,9 +255,25 @@ class git(object):
 			if (masterUpdate - lastUpdateUAS) > datetime.timedelta(seconds = 120):
 				# We need to update UAS Cache
 				# Target Directory
+				print 'Ged below'
 				targetDir = Core.storage.join_path(self.PLUGIN_DIR, NAME + '.bundle', 'http', 'uas')
 				# Force creation, if missing
-				Core.storage.ensure_dirs(targetDir)
+				try:
+					Core.storage.ensure_dirs(targetDir)
+					raise ValueError('A very specific bad thing happened Tommy')
+				except Exception, e:
+					errMsg = str(e)
+					if 'Errno 13' in errMsg:
+						errMsg = errMsg + '\n\nLooks like permissions are not correct, cuz we where denied access\n'
+						errMsg = errMsg + 'to create a needed directory.\n\n'
+						errMsg = errMsg + 'If running on Linux, you might have to issue:\n'
+						errMsg = errMsg + 'sudo chown plex:plex ./WebTools.bundle -R'
+					Log.Critical('Exception in updateUASCache ' + str(e)) 
+					req.clear()
+					req.set_status(500)
+					req.set_header('Content-Type', 'application/json; charset=utf-8')
+					req.finish('Exception in updateUASCache: ' + errMsg)
+					return req
 				# Grap file from Github
 				zipfile = Archive.ZipFromURL(self.UAS_URL+ '/archive/master.zip')
 				for filename in zipfile:
