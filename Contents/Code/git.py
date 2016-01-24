@@ -255,12 +255,10 @@ class git(object):
 			if (masterUpdate - lastUpdateUAS) > datetime.timedelta(seconds = 120):
 				# We need to update UAS Cache
 				# Target Directory
-				print 'Ged below'
 				targetDir = Core.storage.join_path(self.PLUGIN_DIR, NAME + '.bundle', 'http', 'uas')
 				# Force creation, if missing
 				try:
 					Core.storage.ensure_dirs(targetDir)
-					raise ValueError('A very specific bad thing happened Tommy')
 				except Exception, e:
 					errMsg = str(e)
 					if 'Errno 13' in errMsg:
