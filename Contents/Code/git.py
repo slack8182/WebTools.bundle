@@ -134,8 +134,10 @@ class git(object):
 				createStamp = datetime.datetime.fromtimestamp(os.path.getmtime(pFile)).strftime('%Y-%m-%d %H:%M:%S')			
 				return (pl['CFBundleIdentifier'], createStamp)
 			except Exception, e:
-				Log.Debug('Exception in Migrate/getIdentifier : ' + str(e))				
-				return ''
+				errMsg = str(e) + '\nfor something in directory: ' + Core.storage.join_path(self.PLUGIN_DIR, pluginDir)
+				errMsg = errMsg + '\nSkipping migration of directory'
+				Log.Error('Exception in Migrate/getIdentifier : ' + errMsg)				
+				pass
 
 		# Main call
 		Log.Debug('Migrate function called')
@@ -159,7 +161,10 @@ class git(object):
 							if pluginDir not in self.IGNORE_BUNDLE:
 								Log.Debug('About to migrate %s' %(pluginDir))
 								# This we need to migrate
-								(target, dtStamp) = getIdentifier(pluginDir)
+								try:
+									(target, dtStamp) = getIdentifier(pluginDir)
+								except Exception, e:
+									continue				
 								# try and see if part of uas Cache
 								uasListjson = getUASCacheList()
 								bFound = False
