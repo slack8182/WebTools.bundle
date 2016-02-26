@@ -44,6 +44,31 @@ def updateUASTypesCounters():
 #TODO fix updateAllBundleInfo
 # updateAllBundleInfo
 def updateAllBundleInfoFromUAS():
+	def updateInstallDict():
+		# Start by creating a fast lookup cache for all uas bundles
+		if Dict['installed'] == None:
+			Dict['installed'] = {}
+		if Dict['PMS-AllBundleInfo'] == None:
+			Dict['PMS-AllBundleInfo'] = {}
+
+
+		uasBundles = {}
+
+#		for bundle in Dict['PMS-AllBundleInfo']:
+#			uasBundles[bundle['identifier']] = bundle
+
+
+#GED update install dict, so when cache is updated, it checks the unknown
+
+
+#		print 'Ged1', uasBundles
+
+		
+		for installedBundle in Dict['installed']:
+			if not installedBundle.startswith('https://'):
+				print 'Ged44', installedBundle
+		return
+
 	try:
 		# Init the Dict
 		if Dict['PMS-AllBundleInfo'] == None:
@@ -59,25 +84,41 @@ def updateAllBundleInfoFromUAS():
 			json_file.close()
 			# Convert to a JSON Object
 			gits = JSON.ObjectFromString(str(response))
-			for git in gits:
-				# Rearrange data
-				key = git['repo']
-				del git['repo']
-				# Check if already present, and if an install date also is there
-				if key in Dict['PMS-AllBundleInfo']:
-					jsonPMSAllBundleInfo = Dict['PMS-AllBundleInfo'][key]
-					if 'date' not in jsonPMSAllBundleInfo:
-						git['date'] = ""
-				else:
-						git['date'] = ""
-				# Add/Update our Dict
-				Dict['PMS-AllBundleInfo'][key] = git
+			try:
+				for git in gits:
+					# Rearrange data
+					key = git['repo']
+					if key == 'https://github.com/ukdtom/test':
+						# This is out test bundle.....Only add if this is running in devmode
+						# meaning a file named 'devmode' is present in the root of the bundle dir
+						fname = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name, 'WebTools.bundle', 'devmode')
+						print 'GED Look here'
+						if os.path.isfile(fname):
+							continue
+			
+	#******************* WORK IN PROGRESS HERE ****************
+
+
+				
+					# Check if already present, and if an install date also is there
+					installDate = ""
+					if key in Dict['PMS-AllBundleInfo']:
+						jsonPMSAllBundleInfo = Dict['PMS-AllBundleInfo'][key]
+						if 'date' in jsonPMSAllBundleInfo:
+							installDate = Dict['PMS-AllBundleInfo'][key]['date']
+					del git['repo']
+					# Add/Update our Dict
+					Dict['PMS-AllBundleInfo'][key] = git
+					Dict['PMS-AllBundleInfo'][key]['date'] = installDate
+			except Exception, e:
+				Log.Critical('Critical error in updateInstallDict while walking the gits: ' + str(e))
 			Dict.Save()
 			updateUASTypesCounters()
+			updateInstallDict()
 		else:
 			Log.Debug('UAS was sadly not present')
 	except Exception, e:
-		Log.Debug('Fatal error happened in updateAllBundleInfoFromUAS: ' + str(e))
+		Log.Critical('Fatal error happened in updateAllBundleInfoFromUAS: ' + str(e))
 
 class pms(object):
 	# Defaults used by the rest of the class

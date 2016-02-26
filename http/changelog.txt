@@ -1,3 +1,13 @@
+V2.2-DEV-2016-02-25:
+UAS:
+	The return of the Uninstall-button (Issue #132)
+WebTools:
+	Implemented update of main plugin. This however currently causes an error in the logs.
+	
+V2.2-DEV-2016-02-19:
+UAS:
+	Changed focus after showing channel. This should not bring up the keyboard on mobile devices anymore.
+
 V2.2-DEV-2016-02-02:
 UAS:
 	Reverting Issue #119 because of reported issue with locked interface.
