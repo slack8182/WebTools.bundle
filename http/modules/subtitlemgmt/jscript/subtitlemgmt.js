@@ -49,7 +49,8 @@ webtools.functions.subtitlemgmt = {
 	view_subtitle: function() {},
 	subtitle_select_all: function() {},
 	subtitle_delete_confirm: function() {},
-	subtitle_delete: function() {}
+	subtitle_delete: function() {},
+	upload_dialog: function() {}
 };
 // Alias:
 var subtitlemgmt = webtools.functions.subtitlemgmt;
@@ -344,4 +345,87 @@ subtitlemgmt.show_options = function() {
 
 subtitlemgmt.set_pageToShow = function(pageToShow) {
 	subtitlemgmt.selected_section.currentpage = Number(pageToShow);
+}
+
+subtitlemgmt.upload_dialog = function(videokey) {
+	// IF using FormData, verify browser version compatibility
+	//console.log(videokey);
+	$('#myModalLabel').html('<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> Upload Subtitle');
+
+	
+	//Example return of above:  /home/cabox/workspace/dummylibraries/movies/10 Things I Hate About You (1999)/10 Things I Hate About You (1999).mp4
+	var subtitleform = [
+		'<form enctype="multipart/form-data" method="post" id="subtitleupload" onSubmit="return false;">',
+		'<table class="table table-bordered" id="subtitleuploadtable">',
+		'<tr><td colspan=2>If a file exists with the selected language and file extension, it will be overwritten.</td></tr>',
+		'<tr><td>Subtitle:</td><td><input id="localFile" name="localFile" type="file"></td></tr>',
+		'<tr><td>Language:</td><td><select id="subtitlelanguage">{list}</select></td></tr>',
+		//'<tr><td>Targetname:</td><td><input name="subtitlefilename" type="text" value="' + data[videokey] + '"></td></tr>',
+		'</table></form>',
+		];
+	subtitleform = subtitleform.join('\n')
+	
+	
+	var languagelist = [];
+	for (var key in languagecodes) {
+		languagelist.push('<option value="' + key + '">' + languagecodes[key]);
+	}
+	
+	subtitleform = subtitleform.replace('{list}', languagelist.join('\n'));
+	$('#myModalBody').html(subtitleform);
+	$('#myModalFoot').html('<button type="button" class="btn btn-default" onclick="subtitlemgmt.upload(\'' + videokey + '\');">Upload</button> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>');
+		
+	$('#myModal').modal('show');
+}
+
+subtitlemgmt.upload = function(videokey) {
+	var uploadfileextension = $('#localFile').val();
+	uploadfileextension = uploadfileextension.substring(uploadfileextension.lastIndexOf('.'));
+	var language = $('#subtitlelanguage').val();
+	
+	var form = document.forms.namedItem("subtitleupload");
+	var formobject = new FormData(form)
+			
+	$('#myModalBody').html('Uploading file...');
+	$('#myModalFoot').html('<button disabled type="button" class="btn btn-default" data-dismiss="modal">Close</button>');
+	$.ajax({
+		url:'/webtools2?module=pms&function=getParts&key='+videokey,
+		type: 'GET',
+		dataType: 'JSON',
+		success: function (data) {
+			
+			
+			//console.log(data[videokey]);
+			//console.log(uploadfileextension);
+			
+			
+			var newfilename = data[videokey].substring(0,data[videokey].lastIndexOf('.')) + '.' + language + uploadfileextension;
+			//console.log(newfilename)
+			
+			formobject.append("remoteFile", newfilename);
+			$.ajax({
+				url: '/webtools2?module=pms&function=uploadFile',
+				type: 'POST',
+				data: formobject,
+				processData: false,  // tell jQuery not to process the data
+				contentType: false,   // tell jQuery not to set contentType
+				success: function(data) {
+					//console.log('success');
+					//console.log(data);
+					$('#myModalBody').html('Successfully uploaded the file:<br>' + newfilename);
+					$('#myModalFoot').html('<button type="button" class="btn btn-default" data-dismiss="modal" onclick="$(\'#pagenr\').change();">Close</button>');
+				}, 
+				error: function(data) {
+					//console.log('error');
+					//console.log(data);
+					
+					$('#myModalBody').html('Failed to upload the file: <br>' + data.responseText);
+					$('#myModalFoot').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>');
+					
+				}
+			});
+			
+		},
+		error: function () {}
+	})
 }
