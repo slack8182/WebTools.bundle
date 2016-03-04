@@ -349,7 +349,11 @@ subtitlemgmt.set_pageToShow = function(pageToShow) {
 
 subtitlemgmt.upload_dialog = function(videokey) {
 	webtools.log('Requesting getParts for movie/episode with key: ' + videokey);
-
+	$('#myModalLabel').html('<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> Upload Subtitle');
+	$('#myModalBody').html('Fetching info about video/episode.');
+	$('#myModalFoot').html('<button type="button" disabled class="btn btn-default" onclick="subtitlemgmt.upload();">Upload</button> <button disabled type="button" class="btn btn-default" data-dismiss="modal">Close</button>');
+	$('#myModal').modal('show');
+	
 	$.ajax({
 		url: '/webtools2?module=pms&function=getParts&key=' + videokey,
 		type: 'GET',
@@ -357,7 +361,8 @@ subtitlemgmt.upload_dialog = function(videokey) {
 		success: function(data) {
 			webtools.log('Received getParts' + JSON.stringify(data));
 			$('#myModalLabel').html('<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> Upload Subtitle');
-
+		
+	
 			//Example return of above:  /home/cabox/workspace/dummylibraries/movies/10 Things I Hate About You (1999)/10 Things I Hate About You (1999).mp4
 			var subtitleform = [
 				'<form enctype="multipart/form-data" method="post" id="subtitleupload" onSubmit="return false;">',
