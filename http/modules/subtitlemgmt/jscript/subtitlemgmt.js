@@ -433,7 +433,7 @@ subtitlemgmt.upload = function() {
 		success: function(data) {
 			webtools.log('Upload of ' + newfilename + ' was sucessfull.');
 			$('#myModalBody').html('Successfully uploaded the file:<br>' + newfilename);
-			$('#myModalFoot').html('<button type="button" class="btn btn-default" data-dismiss="modal" onclick="$(\'#pagenr\').change();">Close</button>');
+			$('#myModalFoot').html('<button type="button" class="btn btn-default" onclick="$(\'#pagenr\').change();">Refresh Page</button>');
 		},
 		error: function(data) {
 			webtools.log('Error occured while uploading: ' + data.responseText);
