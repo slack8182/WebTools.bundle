@@ -377,7 +377,7 @@ subtitlemgmt.upload_dialog = function(videokey) {
 
 			var languagelist = [];
 			for (var key in languagecodes) {
-				languagelist.push('<option value="' + key + '">' + languagecodes[key]);
+				languagelist.push('<option value="' + key + '">' + languagecodes[key] + ' (.' + key + ')');
 			}
 			
 			var targetfile = [];
@@ -421,7 +421,13 @@ subtitlemgmt.upload = function() {
 
 	$('#myModalBody').html('Uploading file...');
 	$('#myModalFoot').html('<button disabled type="button" class="btn btn-default" data-dismiss="modal">Close</button>');
-
+	
+	var functiontocall = '';
+	if (subtitlemgmt.selected_section.contentstype == 'video') {
+		functiontocall = 'subtitlemgmt.fetch_section_type_movies';
+	} else if (subtitlemgmt.selected_section.contentstype == 'episodes') {
+		functiontocall = 'subtitlemgmt.display_episodes';
+	}
 	
 	formobject.append("remoteFile", newfilename);
 	$.ajax({
@@ -433,7 +439,7 @@ subtitlemgmt.upload = function() {
 		success: function(data) {
 			webtools.log('Upload of ' + newfilename + ' was sucessfull.');
 			$('#myModalBody').html('Successfully uploaded the file:<br>' + newfilename);
-			$('#myModalFoot').html('<button type="button" class="btn btn-default" onclick="$(\'#pagenr\').change();">Refresh Page</button>');
+			$('#myModalFoot').html('<button type="button" class="btn btn-default" onclick="subtitlemgmt.set_pageToShow(' + subtitlemgmt.selected_section.currentpage + ');' + functiontocall + '(' + subtitlemgmt.selected_section.key + ',' + subtitlemgmt.selected_section.currentpage + ');">Refresh Page</button>');
 		},
 		error: function(data) {
 			webtools.log('Error occured while uploading: ' + data.responseText);
