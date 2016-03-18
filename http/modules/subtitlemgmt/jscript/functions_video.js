@@ -141,13 +141,13 @@ subtitlemgmt.display_episodes = function() {
 			var selectedsubtitle = '';
 
 			if (subtitle.languageCode != null) {
-				if (typeof(languagecodes[subtitle.languageCode.toLowerCase()]) != 'undefined') {
-					//language = '<img src="flags/blank.png" class="flag flag-'+languagecodes[subtitle.languageCode.toUpperCase()].toLowerCase()+'" alt="'+subtitle.languageCode.toUpperCase()+'"/>';
-					var languagetext = languagecodes[subtitle.languageCode.toLowerCase()];
-					if (languagecodes[subtitle.languageCode.toLowerCase()].length > 8) {
-						languagetext = languagecodes[subtitle.languageCode.toLowerCase()].substr(0, 6) + '...';
+				if (typeof(webtools.languagecodes[subtitle.languageCode.toLowerCase()]) != 'undefined') {
+					//language = '<img src="flags/blank.png" class="flag flag-'+webtools.languagecodes[subtitle.languageCode.toUpperCase()].toLowerCase()+'" alt="'+subtitle.languageCode.toUpperCase()+'"/>';
+					var languagetext = webtools.languagecodes[subtitle.languageCode.toLowerCase()];
+					if (webtools.languagecodes[subtitle.languageCode.toLowerCase()].length > 8) {
+						languagetext = webtools.languagecodes[subtitle.languageCode.toLowerCase()].substr(0, 6) + '...';
 					}
-					language = '<span data-toggle="tooltip" title="' + languagecodes[subtitle.languageCode.toLowerCase()] + '">' + languagetext + '</span>';
+					language = '<span data-toggle="tooltip" title="' + webtools.languagecodes[subtitle.languageCode.toLowerCase()] + '">' + languagetext + '</span>';
 				} else {
 					language = subtitle.languageCode.toLowerCase();
 				}

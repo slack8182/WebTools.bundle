@@ -31,7 +31,7 @@ var webtools = {
 	credits: '',
 	install_WT: function() {},
 	wait_update: function () {},
-	
+	languagecodes: {},
 	// Search a table that has the tr with an id tag unique for each row
 	keywordarray: [],
 	currentkeyword: 0,
@@ -66,6 +66,25 @@ webtools.list_modules.inline([
 				error: function(data) {
 					data.url = this.url;
 					webtools.display_error('Failed fetching the version from the server. Reload the page and try again.<br>If the error persists please restart the server.<br>Contact devs on the Plex forums if it occurs again.', data);
+					webtools.list_modules.abort('Error: ' + data.statusText);
+				}
+			});
+		},
+		function(callback, activatemodulename) {
+			//Name:VersionFetch
+			webtools.loading();
+			$.ajax({
+				url: '/webtools2?module=language&function=get3CodeLangList',
+				cache: false,
+				dataType: 'JSON',
+				success: function(data) {
+					webtools.languagecodes = data;
+					console.log(webtools.languagecodes);
+					callback('LanguageCodes:Success', activatemodulename);
+				},
+				error: function(data) {
+					data.url = this.url;
+					webtools.display_error('Failed fetching the languagecodes from the server. Reload the page and try again.<br>If the error persists please restart the server.<br>Contact devs on the Plex forums if it occurs again.', data);
 					webtools.list_modules.abort('Error: ' + data.statusText);
 				}
 			});

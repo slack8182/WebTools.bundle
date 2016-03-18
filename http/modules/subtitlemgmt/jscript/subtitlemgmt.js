@@ -376,8 +376,8 @@ subtitlemgmt.upload_dialog = function(videokey) {
 			subtitleform = subtitleform.join('\n')
 
 			var languagelist = [];
-			for (var key in languagecodes) {
-				languagelist.push('<option value="' + key + '">' + languagecodes[key] + ' (.' + key + ')');
+			for (var key in webtools.languagecodes) {
+				languagelist.push('<option value="' + key + '">' + webtools.languagecodes[key] + ' (.' + key + ')');
 			}
 			
 			var targetfile = [];
