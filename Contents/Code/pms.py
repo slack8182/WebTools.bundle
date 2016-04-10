@@ -68,8 +68,10 @@ def updateAllBundleInfoFromUAS():
 				Log.Info('Checking unknown bundle: ' + installedBundle + ' to see if it is part of UAS now')
 				if installedBundle in uasBundles:
 					# Get the installed date of the bundle formerly known as unknown :-)
+					installedBranch = Dict['installed'][installedBundle]['branch']
 					installedDate = Dict['installed'][installedBundle]['date']
 					# Add updated stuff to the dicts
+					Dict['PMS-AllBundleInfo'][uasBundles[installedBundle]]['branch'] = installedBranch
 					Dict['PMS-AllBundleInfo'][uasBundles[installedBundle]]['date'] = installedDate
 					Dict['installed'][uasBundles[installedBundle]] = Dict['PMS-AllBundleInfo'][uasBundles[installedBundle]]
 					# Remove old stuff from the Ditcs
@@ -93,15 +95,24 @@ def updateAllBundleInfoFromUAS():
 				for git in gits:
 					# Rearrange data
 					key = git['repo']				
+					installBranch = ''
 					# Check if already present, and if an install date also is there
 					installDate = ""
 					if key in Dict['PMS-AllBundleInfo']:
 						jsonPMSAllBundleInfo = Dict['PMS-AllBundleInfo'][key]
+						if 'branch' in jsonPMSAllBundleInfo:
+							installBranch = Dict['PMS-AllBundleInfo'][key]['branch']
+
+
+
+						Log.Debug('Ged1: ' + installBranch)
+
 						if 'date' in jsonPMSAllBundleInfo:
 							installDate = Dict['PMS-AllBundleInfo'][key]['date']
 					del git['repo']
 					# Add/Update our Dict
 					Dict['PMS-AllBundleInfo'][key] = git
+					Dict['PMS-AllBundleInfo'][key]['branch'] = installBranch
 					Dict['PMS-AllBundleInfo'][key]['date'] = installDate
 			except Exception, e:
 				Log.Critical('Critical error in updateInstallDict while walking the gits: ' + str(e))
@@ -142,6 +153,10 @@ class pms(object):
 			return self.getAllBundleInfo(req)
 		elif function == 'getParts':
 			return self.getParts(req)
+		elif function == 'getSectionLetterList':
+			return self.getSectionLetterList(req)
+		elif function == 'getSectionByLetter':
+			return self.getSectionByLetter(req)
 		else:
 			req.clear()
 			req.set_status(412)
@@ -776,6 +791,99 @@ class pms(object):
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')
 			req.finish('Fatal error happened in getSubtitles')
+
+	''' get section letter-list '''
+	def getSectionLetterList(self, req):
+		Log.Debug('Section requested')
+		try:
+			key = req.get_argument('key', 'missing')
+			Log.Debug('Section key is %s' %(key))
+			if key == 'missing':
+				req.clear()
+				req.set_status(412)
+				req.finish('Missing key of section')
+				return req
+			# Got all the needed params, so lets grap the list
+			myURL = 'http://127.0.0.1:32400/library/sections/' + key + '/firstCharacter'
+			resultJson = { }			
+			sectionLetterList = XML.ElementFromURL(myURL).xpath('//Directory')
+			for sectionLetter in sectionLetterList:
+				resultJson[sectionLetter.get('title')] = {
+													'key' : sectionLetter.get('key'), 'size': sectionLetter.get('size')}					
+			Log.Debug('Returning %s' %(resultJson))
+			req.clear()
+			req.set_status(200)
+			req.set_header('Content-Type', 'application/json; charset=utf-8')
+			req.finish(json.dumps(resultJson, sort_keys=True))
+		except Exception, e:
+			Log.Debug('Fatal error happened in getSectionLetterList ' + str(e))
+			req.clear()
+			req.set_status(500)
+			req.set_header('Content-Type', 'application/json; charset=utf-8')
+			req.finish('Fatal error happened in getSectionLetterList: ' + str(e))
+
+	''' get getSectionByLetter '''
+	def getSectionByLetter(self,req):
+		Log.Debug('getSectionByLetter requested')
+		try:
+			key = req.get_argument('key', 'missing')
+			Log.Debug('Section key is %s' %(key))
+			if key == 'missing':
+				req.clear()
+				req.set_status(412)
+				req.finish('Missing key of section')
+				return req
+			start = req.get_argument('start', 'missing')
+			Log.Debug('Section start is %s' %(start))
+			if start == 'missing':
+				req.clear()
+				req.set_status(412)
+				req.finish('Missing start of section')
+				return req
+			size = req.get_argument('size', 'missing')
+			Log.Debug('Section size is %s' %(size))
+			if size == 'missing':
+				req.clear()
+				req.set_status(412)
+				req.finish('Missing size of section')
+				return req
+			letterKey = req.get_argument('letterKey', 'missing')
+			Log.Debug('letterKey is %s' %(letterKey))
+			if letterKey == 'missing':
+				req.clear()
+				req.set_status(412)
+				req.finish('Missing letterKey')
+				return req
+			getSubs = req.get_argument('getSubs', 'missing')
+			# Got all the needed params, so lets grap the contents
+			try:
+				myURL = 'http://127.0.0.1:32400/library/sections/' + key + '/firstCharacter/' + letterKey + '?X-Plex-Container-Start=' + start + '&X-Plex-Container-Size=' + size
+				rawSection = XML.ElementFromURL(myURL)
+				Section=[]
+				for media in rawSection:
+					if getSubs != 'true':
+						media = {'key':media.get('ratingKey'), 'title':media.get('title')}
+					else:
+						subtitles = self.getSubtitles(req, mediaKey=media.get('ratingKey'))
+						media = {'key':media.get('ratingKey'), 'title':media.get('title'), 'subtitles':subtitles}
+					Section.append(media)					
+				Log.Debug('Returning %s' %(Section))
+				req.clear()
+				req.set_status(200)
+				req.set_header('Content-Type', 'application/json; charset=utf-8')
+				req.finish(json.dumps(Section))
+			except Exception, e:
+				Log.Debug('Fatal error happened in getSectionByLetter: ' + str(e))
+				req.clear()
+				req.set_status(500)
+				req.set_header('Content-Type', 'application/json; charset=utf-8')
+				req.finish('Fatal error happened in getSectionByLetter: ' + str(e))
+		except Exception, e:
+			Log.Debug('Fatal error happened in getSectionByLetter: ' + str(e))
+			req.clear()
+			req.set_status(500)
+			req.set_header('Content-Type', 'application/json; charset=utf-8')
+			req.finish('Fatal error happened in getSectionByLetter: ' + str(e))
 
 	''' get section '''
 	def getSection(self,req):
