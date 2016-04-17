@@ -10,14 +10,12 @@ $RECYCLE.BIN/
 
 # Ignore the UAS cache
 http/uas
-*.pyc
 
 # Windows Installer files
 *.cab
 *.msi
 *.msm
 *.msp
-debug
 
 # =========================
 # Operating System Files
@@ -45,4 +43,8 @@ Icon
 # gedit tmp files
 #*****************
 *~
+ 
+*.pyc
+debug
+
 
