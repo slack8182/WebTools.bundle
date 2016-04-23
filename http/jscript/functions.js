@@ -9,6 +9,7 @@ var webtools = {
 		['subtitlemgmt', 'Subtitle Management'],
 		['logviewer', 'LogViewer/Downloader Tool'],
 		['install', 'Unsupported AppStore']
+		//['findunmatched','FindUnmatched']
 	],
 	stylesheets: [],
 	active_stylesheet: '',
@@ -150,7 +151,8 @@ webtools.list_modules.inline([
 			});
 		},
 		function(callback, activatemodulename) {
-			webtools.listlogfiles(callback, activatemodulename);
+			callback('LogfileNamesFetch:Ignored', activatemodulename);
+			//webtools.listlogfiles(callback, activatemodulename);
 		},
 		function(callback, activatemodulename) {
 			$.ajax({
@@ -292,7 +294,7 @@ webtools.save_options = function() {
 };
 
 webtools.listlogfiles = function(callback, activatemodulename) {
-
+ // Currently unused
 	webtools.loading();
 	//Name:LogfileNamesFetch
 	$("#LogfilesMenu").html('');

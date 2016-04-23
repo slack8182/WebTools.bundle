@@ -35,6 +35,9 @@ FRONTEND:
 		#### Subtitlemgmt: Now uses the new Language Module
 		#93  WT: Now has support for custom themes! First out is a draft of trumpy81 that needs to be finetuned by trumpy81
 		#160 WT: Implemented Factory Reset functionality. Available through the Options menu.
+		#149 Subtitlemgmt: Implemented letters instead of straight up numbers for paging.
+		#### WT: Removed LogFiles from top menu, redirecting users to LogViewer instead.
+		#### WT: Themes are now applied on loginscreen aswell.
 		
 ####
 
