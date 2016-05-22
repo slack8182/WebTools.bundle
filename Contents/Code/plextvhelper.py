@@ -6,6 +6,7 @@
 # NAME variable must be defined in the calling unit, and is the name of the application
 #
 ######################################################################################################################
+import sys
 
 class plexTV(object):
 	# Defaults used by the rest of the class
@@ -27,26 +28,6 @@ class plexTV(object):
 	# Login to Plex.tv
 	def login(self, user, pwd):
 		Log.Info('Start to auth towards plex.tv')
-
-		'''
-		user = req.get_argument('user', '')
-		if user == '':
-			Log.Error('Missing username')
-			req.clear()
-			req.set_status(412)
-			req.finish("<html><body>Missing username</body></html>")
-			return req
-		pwd = req.get_argument('pwd', '')
-		if pwd == '':
-			Log.Error('Missing password')
-			req.clear()
-			req.set_status(412)
-			req.finish("<html><body>Missing password</body></html>")
-			return req
-		'''
-
-
-		# Got what we needed, so let's logon
 		authString = String.Base64Encode('%s:%s' % (user, pwd))
 		self.myHeader['Authorization'] = 'Basic ' + authString
 		try:
@@ -54,11 +35,8 @@ class plexTV(object):
 			Log.Info('Authenticated towards plex.tv with success')				
 			return token
 		except Ex.HTTPError, e:
-			Log.Critical('Login error: ' + str(e))
-			req.clear()
-			req.set_status(e.code)
-			req.finish(e)
-			return (req, '')
+			Log.Critical('Login error: ' + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+			return None
 		
 	''' Is user the owner of the server?
 			user identified by token
