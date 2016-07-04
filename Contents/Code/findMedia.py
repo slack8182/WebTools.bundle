@@ -11,7 +11,8 @@
 import urllib
 import unicodedata
 import json
-import time, sys
+import time, sys, os
+from consts import DEBUGMODE
 
 # Consts used here
 AmountOfMediasInDatabase = 0																																				# Int of amount of medias in a database section
@@ -125,37 +126,23 @@ class findMedia(object):
 				req.clear()
 				req.set_status(412)
 				req.finish("Unknown key parameter")
-
-
-
-
 			value = req.get_argument('value', 'missing')
 			if value == 'missing':
 				req.clear()
 				req.set_status(412)
 				req.finish("Missing value parameter")
-
-			print 'Ged2', value
 			value = value.replace("u'", "")
 			value = value.split(',')
-
 			for item in value:
-				print 'Ged3', item
-
-
-			print 'Ged4', value
-
-#str.replace(old, new[, max])
-
-			Dict['findMedia'][key] = value
+				Dict['findMedia'][key] = value
 			Dict.Save()
 			req.clear()		
 			req.set_status(200)
 		except Exception, e:
-			Log.Debug('Fatal error in setSetting: ' + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+			Log.Exception('Fatal error in setSetting: ' + str(e))
 			req.clear()
 			req.set_status(500)
-			req.finish("Unknown error happened in findMedia-setSetting: " + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+			req.finish("Unknown error happened in findMedia-setSetting: " + str(e))
 
 
 	# Reset settings to default
@@ -182,6 +169,7 @@ class findMedia(object):
 			if 'WebTools' in retMsg:
 				req.set_status(204)
 			else:
+				Log.Info('Result is: ' + str(retMsg))
 				req.set_status(200)
 				req.finish(retMsg)
 		elif runningState == 99: 
@@ -272,7 +260,7 @@ class findMedia(object):
 			except ValueError:
 				Log.Info('Aborted in ScanMedias')
 			except Exception, e:
-				Log.Critical('Exception happend in scanMedias: ' + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+				Log.Exception('Exception happend in scanMedias: ' + str(e))
 				statusMsg = 'Idle'
 
 		# Scan the file system
@@ -284,6 +272,7 @@ class findMedia(object):
 				runningState = -1
 				Log.Debug("*********************** FileSystem Paths: *****************************************")
 				bScanStatusCount = 0
+				# Wondering why I do below. Part of find-unmatched, and forgot....SIGH
 				files = str(filePath)[2:-2].replace("'", "").split(', ')
 				Log.Debug(files)
 				for filePath in files:
@@ -313,14 +302,15 @@ class findMedia(object):
 								mediasFromFileSystem.append(Core.storage.join_path(root,file))
 								statusMsg = 'Scanning file: ' + file
 					Log.Debug('***** Finished scanning filesystem *****')
-#					Log.Debug(mediasFromFileSystem)
+					if DEBUGMODE:
+						Log.Debug(mediasFromFileSystem)
 					runningState = 2
 			except ValueError:
 				statusMsg = 'Idle'
 				runningState = 99
 				Log.Info('Aborted in getFiles')
 			except Exception, e:
-				Log.Critical('Exception happend in getFiles: ' + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+				Log.Exception('Exception happend in getFiles: ' + str(e))
 				runningState = 99
 
 		def scanShowDB(sectionNumber=0):
@@ -388,7 +378,8 @@ class findMedia(object):
 					if len(shows) == 0:
 						statusMsg = 'Scanning database: %s : Done' %(totalSize)
 						Log.Debug('***** Done scanning the database *****')
-#						Log.Debug(mediasFromDB)
+						if DEBUGMODE:
+							Log.Debug(mediasFromDB)
 						runningState = 1
 						break
 				return
@@ -397,7 +388,7 @@ class findMedia(object):
 				runningState = 99
 				Log.Info('Aborted in ScanShowDB')
 			except Exception, e:
-				Log.Debug('Fatal error in scanShowDB: ' + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+				Log.Exception('Fatal error in scanShowDB: ' + str(e))
 				runningState = 99
 		# End scanShowDB
 
@@ -428,19 +419,20 @@ class findMedia(object):
 							raise ValueError('Aborted')
 						iCount += 1
 						filename = part.get('file')		
-						filename = String.Unquote(filename).encode('utf8', 'ignore')	
+						filename = String.Unquote(filename).encode('utf8', 'ignore')
 						mediasFromDB.append(filename)
 						statusMsg = 'Scanning database: item %s of %s : Working' %(iCount, totalSize)
 					iStart += self.MediaChuncks
 					if len(medias) == 0:
 						statusMsg = 'Scanning database: %s : Done' %(totalSize)
 						Log.Debug('***** Done scanning the database *****')
-#						Log.Debug(mediasFromDB)
+						if DEBUGMODE:
+							Log.Debug(mediasFromDB)
 						runningState = 1
 						break
 				return
 			except Exception, e:
-				Log.Debug('Fatal error in scanMovieDb: ' + str(e) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+				Log.Exception('Fatal error in scanMovieDb: ' + str(e))
 				runningState = 99
 		# End scanMovieDb
 
@@ -472,7 +464,7 @@ class findMedia(object):
 				req.set_header('Content-Type', 'application/json; charset=utf-8')
 				req.finish('Scanning already in progress')				
 		except Exception, ex:
-			Log.Debug('Fatal error happened in scanSection: ' + str(ex) + 'on line {}'.format(sys.exc_info()[-1].tb_lineno))
+			Log.Exception('Fatal error happened in scanSection: ' + str(ex))
 			req.clear()
 			req.set_status(500)
 			req.set_header('Content-Type', 'application/json; charset=utf-8')

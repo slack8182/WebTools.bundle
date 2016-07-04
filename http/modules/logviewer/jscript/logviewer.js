@@ -103,8 +103,10 @@ logviewer.viewlogfile = function(filename) {
 
 logviewer.download = function(filename) {
   if (typeof(filename) != 'undefined') {
+		webtools.log('Trying to download: ' + filename);
     window.location.href = '/webtools2?module=logs&function=download&fileName=' + filename;
   } else {
+		webtools.log('Trying to download: ' + filename);
     window.location.href = '/webtools2?module=logs&function=download';
   }
 }

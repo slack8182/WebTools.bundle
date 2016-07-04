@@ -9,7 +9,7 @@ var webtools = {
 		['subtitlemgmt', 'Subtitle Management'],
 		['logviewer', 'LogViewer/Downloader Tool'],
 		['install', 'Unsupported AppStore']
-		//['findunmatched','FindUnmatched']
+		,['findmedia','FindMedia']
 	],
 	stylesheets: [],
 	active_stylesheet: '',
