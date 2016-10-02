@@ -303,7 +303,9 @@ class findMedia(object):
 								composed_file = misc().Unicodize(Core.storage.join_path(root,file))						
 								if Platform.OS == 'Windows':
 									# I hate windows
-									composed_file = composed_file[4:]								
+									pos = composed_file.find(':') -1
+									#composed_file = composed_file[4:]								
+									composed_file = composed_file[pos:]								
 								mediasFromFileSystem.append(composed_file)
 								statusMsg = 'Scanning file: ' + file
 					Log.Debug('***** Finished scanning filesystem *****')
