@@ -25,6 +25,9 @@ bAbort = False																																																			# Flag to set i
 Extras = ['behindthescenes','deleted','featurette','interview','scene','short','trailer']														# Local extras
 ExtrasDirs = ['behind the scenes', 'deleted scenes', 'featurettes', 'interviews', 'scenes', 'shorts', 'trailers']		# Directories to be ignored
 KEYS = ['IGNORE_HIDDEN', 'IGNORED_DIRS', 'VALID_EXTENSIONS'] 																												# Valid keys for prefs
+excludeElements='Actor,Collection,Country,Director,Genre,Label,Mood,Producer,Role,Similar,Writer'
+excludeFields='summary,tagline'
+
 
 
 class findMedia(object):	
@@ -343,7 +346,7 @@ class findMedia(object):
 				# So let's walk the library
 				while True:
 					# Grap shows
-					shows = XML.ElementFromURL(self.CoreUrl + sectionNumber + '/all?X-Plex-Container-Start=' + str(iCShow) + '&X-Plex-Container-Size=' + str(self.MediaChuncks)).xpath('//Directory')
+					shows = XML.ElementFromURL(self.CoreUrl + sectionNumber + '/all?X-Plex-Container-Start=' + str(iCShow) + '&X-Plex-Container-Size=' + str(self.MediaChuncks) + '&excludeElements=' + excludeElements + '&excludeFields=' + excludeFields).xpath('//Directory')
 					# Grap individual show
 					for show in shows:
 						statusShow = show.get('title')
@@ -352,7 +355,7 @@ class findMedia(object):
 						iCSeason = 0
 						# Grap seasons
 						while True:
-							seasons = XML.ElementFromURL('http://127.0.0.1:32400' + show.get('key') + '?X-Plex-Container-Start=' + str(iCSeason) + '&X-Plex-Container-Size=' + str(self.MediaChuncks)).xpath('//Directory')
+							seasons = XML.ElementFromURL('http://127.0.0.1:32400' + show.get('key') + '?X-Plex-Container-Start=' + str(iCSeason) + '&X-Plex-Container-Size=' + str(self.MediaChuncks) + '&excludeElements=' + excludeElements + '&excludeFields=' + excludeFields).xpath('//Directory')
 							# Grap individual season
 							for season in seasons:			
 								if season.get('title') == 'All episodes':
@@ -365,7 +368,7 @@ class findMedia(object):
 								iEpisode = 0
 								iCEpisode = 0
 								while True:
-									episodes = XML.ElementFromURL('http://127.0.0.1:32400' + season.get('key') + '?X-Plex-Container-Start=' + str(iCEpisode) + '&X-Plex-Container-Size=' + str(self.MediaChuncks)).xpath('//Part')
+									episodes = XML.ElementFromURL('http://127.0.0.1:32400' + season.get('key') + '?X-Plex-Container-Start=' + str(iCEpisode) + '&X-Plex-Container-Size=' + str(self.MediaChuncks) + '&excludeElements=' + excludeElements + '&excludeFields=' + excludeFields).xpath('//Part')
 									for episode in episodes:
 										if bAbort:
 											raise ValueError('Aborted')
@@ -422,7 +425,7 @@ class findMedia(object):
 				# So let's walk the library
 				while True:
 					# Grap a chunk from the server
-					medias = XML.ElementFromURL(self.CoreUrl + sectionNumber + '/all?X-Plex-Container-Start=' + str(iStart) + '&X-Plex-Container-Size=' + str(self.MediaChuncks)).xpath('//Part')
+					medias = XML.ElementFromURL(self.CoreUrl + sectionNumber + '/all?X-Plex-Container-Start=' + str(iStart) + '&X-Plex-Container-Size=' + str(self.MediaChuncks) + '&excludeElements=' + excludeElements + '&excludeFields=' + excludeFields).xpath('//Part')
 					# Walk the chunk
 					for part in medias:
 						if bAbort:
