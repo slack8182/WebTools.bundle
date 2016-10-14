@@ -908,9 +908,14 @@ class git(object):
 			branch = 'master'
 		# Check for updates
 		try:
-			url += '/commits/%s.atom' % branch
-			Log.Debug('URL is: ' + url)
-			response = Datetime.ParseDate(HTML.ElementFromURL(url).xpath('//entry')[0].xpath('./updated')[0].text).strftime("%Y-%m-%d %H:%M:%S")
+			if '_WTRELEASE' in branch:
+				url = 'https://api.github.com/repos' + url[18:] + '/releases/latest'
+				Log.Debug('URL is: ' + url)				
+				response = JSON.ObjectFromURL(url)['published_at']
+			else:
+				url += '/commits/%s.atom' % branch
+				Log.Debug('URL is: ' + url)
+				response = Datetime.ParseDate(HTML.ElementFromURL(url).xpath('//entry')[0].xpath('./updated')[0].text).strftime("%Y-%m-%d %H:%M:%S")
 			Log.Debug('Last update for: ' + url + ' is: ' + str(response))
 			if UAS:
 				return response
