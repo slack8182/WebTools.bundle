@@ -89,17 +89,19 @@ def updateAllBundleInfoFromUAS():
 					installBranch = ''
 					# Check if already present, and if an install date also is there
 					installDate = ""
+					CommitId = ""
 					if key in Dict['PMS-AllBundleInfo']:
 						jsonPMSAllBundleInfo = Dict['PMS-AllBundleInfo'][key]
-						if 'branch' in jsonPMSAllBundleInfo:
-							installBranch = Dict['PMS-AllBundleInfo'][key]['branch']
 						if 'date' in jsonPMSAllBundleInfo:
 							installDate = Dict['PMS-AllBundleInfo'][key]['date']
+						if 'CommitId' in jsonPMSAllBundleInfo:						
+							CommitId = Dict['PMS-AllBundleInfo'][key]['CommitId']
 					del git['repo']
 					# Add/Update our Dict
 					Dict['PMS-AllBundleInfo'][key] = git
-					Dict['PMS-AllBundleInfo'][key]['branch'] = installBranch
 					Dict['PMS-AllBundleInfo'][key]['date'] = installDate
+					Dict['PMS-AllBundleInfo'][key]['CommitId'] = CommitId
+
 			except Exception, e:
 				Log.Exception('Critical error in updateAllBundleInfoFromUAS1 while walking the gits: ' + str(e))
 			Dict.Save()
